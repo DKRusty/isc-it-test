@@ -155,3 +155,55 @@ from Sales.Customers c
 left join t1 on c.custid=t1.cid;
 
 __________________________________________________________________________________________________
+
+Глава 8
+
+Задание №1-1
+
+insert into dbo.Customers(custid, companyname, country, region, city)
+values(100, 'Coho Winery', 'USA', 'WA', 'Redmond');
+
+Задание №1-2
+
+insert into dbo.Customers(custid, companyname, country, region, city)
+select  c.custid, companyname, country, region, city
+from Sales.Orders  orde left join Sales.Customers c on orde.custid = c.custid
+where orderdate is not null
+group by c.custid, companyname, country, region, city ;
+
+Задание №1-3
+
+select  * into dbo.Orders
+from Sales.Orders
+where orderdate between '20060101' AND  '20090101';
+
+Задание №2
+
+delete from dbo.Orders
+output deleted.orderid, deleted.orderdate
+where orderdate < '20060801';
+
+Задание №3
+
+delete from dbo.Orders
+where custid in (select custid from dbo.Customers 
+where country='Brazil')
+
+Задание №4
+
+update dbo.Customers
+set region = '<None>'
+output deleted.custid, deleted.region AS oldregion,
+inserted.region AS newregion
+where region is null;
+
+Задание №5
+
+update dbo.orders
+set shipcountry = c.country,
+shipregion = c.region,
+shipcity = c.city
+from dbo.orders o 
+inner join dbo.customers c 
+on c.custid = o.custid
+where c.country = 'UK';
