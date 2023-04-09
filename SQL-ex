@@ -1,0 +1,317 @@
+6(2) - 1
+Select distinct p.maker,
+l.speed from LAPTOP l 
+inner join product p 
+on l.model=p.model
+where hd>=10
+order by 1 ,2
+
+7(2) - 2
+with t(model,price) as
+(select model,price from PC
+union all
+select model,price from Laptop
+union all
+select model,price from Printer)
+select p.model,t.price from product p
+inner join t on t.model=p.model
+where p.maker like 'B'
+group by p.model,t.price
+
+8(2) - 3 
+Select maker from product p
+where type in ('PC')
+except
+Select maker from product p
+where type in ('Laptop')
+
+14(2) - 4
+select s.class,
+s.name,
+cl.country 
+from ships s 
+left join classes cl 
+on s.class=cl.class
+where cl.numGuns>=10
+
+15(2) - 5
+select hd from pc
+group by hd
+having count(hd)>=2
+
+16(2) - 6
+with t1 as 
+(select  model,speed,ram from pc
+group by model,speed,ram
+),
+t2 as 
+(select model,speed,ram from pc
+group by model,speed,ram
+)
+select t1.model,
+t2.model,
+t1.speed,
+t1.ram from t1,t2
+where t1.speed=t2.speed
+and t1.ram=t2.ram and
+t1.model!=t2.model and 
+t1.model>t2.model
+group by t1.model,t2.model,t1.speed,t1.ram
+
+17(2) - 7
+select distinct p.type,
+l.model, 
+l.speed 
+from laptop l 
+left join product p 
+on p.model=l.model 
+where speed<(select min(speed) from PC)
+
+18(2) - 8
+select distinct maker,
+price from printer pr
+left join product p 
+on pr.model=p.model
+where pr.color='y' 
+and pr.price=(select min(price) from printer where color='y')
+
+23(2) - 9 
+with t1 (maker) as (Select maker 
+from pc
+left join product p 
+on pc.model=p.model
+where speed>=750
+group by maker),
+t2 (maker) as (
+Select maker from laptop l
+left join product p
+on l.model=p.model
+where speed>=750
+group by maker)
+select t1.maker 
+from t1 
+inner join t2 
+on t1.maker=t2.maker
+
+36(2) - 10
+select name from ships s ,
+classes cl
+where s.name=cl.class
+union
+select ship from Outcomes o,classes cl
+where o.ship=cl.class
+
+40(2) - 11
+with t1 (maker,  cty) as (select maker,count(distinct type) from product
+group by maker),
+t2 (maker,cm) as (
+select maker,
+count(distinct model)
+from product
+group by maker
+having count(distinct model)>1)
+select t1.maker,
+type from t1 
+inner join t2 
+on t1.maker=t2.maker
+inner join product p
+on p.maker=t1.maker
+where cty=1
+group by t1.maker,type
+
+
+43(2) - 12
+select distinct name
+from battles
+where year(date) not in (select launched from ships)
+
+51(3) - 13 
+with t1 (name,numguns,displacement) as (select name,
+numguns,
+displacement
+from ships s 
+left join classes c
+on s.class=c.class
+union 
+select ship,numguns,
+displacement 
+from Outcomes o
+left join classes c
+on o.ship=c.class),
+t2 (maks,dis) as (
+select max(numguns),
+displacement 
+from classes 
+group by displacement)
+select  name 
+from t1 
+left join t2
+on t1.displacement=t2.dis
+where numguns is not null 
+and t1.numguns=t2.maks
+
+71(2) - 14 
+with t1 (dm,maker) as (select count(distinct model),
+maker from product
+where type='PC'
+group by maker),
+t2 (maker,dm) as (
+select maker,
+count(distinct pc.model)
+from pc left join product p
+on p.model=pc.model 
+group by maker)
+select t1.maker 
+from t1 inner join t2 
+on t1.maker=t2.maker
+where t1.dm=t2.dm
+
+74(2) - 15
+with t1 (class,rnk) as (select class,(case 
+when country like 'Россия' then '1'
+when country like 'Russia' then '1'
+else 0 end) as rnk from classes)
+select country,c.class from classes c 
+left join t1 on c.class=t1.class
+where t1.rnk=1 or (select sum(rnk) from t1)=0
+
+83(2) - 16
+with t1 (name,r1,r2,r3,r4,r5,r6,r7) as (
+select s.name, 
+case 
+when cl.numGuns=8 then 1
+else 0 end as r1,
+case
+when cl.bore = 15 then 1
+else 0 end as r2,
+case
+when cl.displacement = 32000 then 1
+else 0 end as r3,
+case
+when cl.type = 'bb'  then 1
+else 0 end as r4,
+case
+when s.launched = 1915 then 1
+else 0 end as r5,
+case
+when s.class='Kongo' then 1
+else 0 end as r6,
+case
+when country='USA' then 1
+else 0 end as r7
+from classes cl inner join ships s on cl.class=s.class),
+t2 (name,summa) as (
+select t1.name,r1+r2+r3+r4+r5+r6+r7 from t1
+)
+select t2.name from t2
+where summa>=4
+
+90(2) - 17 
+select * from product
+where model not in (
+select top 3 model from product
+order by model desc) and 
+model not in (select top 3 model from product
+order by model ) 
+order by model desc
+
+105(2) - 18
+with t1 (maker1,maks) as 
+(select maker,max(rnk) as m from (select  maker,
+row_number() over(order by maker,model) as rnk from product) t1
+group by maker) 
+select maker, model, 
+row_number() over(order by maker,model) as 'A',
+dense_rank() over(order by maker) as 'B',
+rank() over(order by maker) as 'C',
+t1.maks as 'D'
+from product left join t1
+on t1.maker1=product.maker
+
+117(2) - 19
+with t1 (country,maxim,name) as (select country,max(numguns*5000),
+'numguns' from classes
+group by country
+union all
+select country,
+max(bore*3000),'bore'
+from classes
+group by country
+union all
+select country,max(displacement),
+'displacement' from classes
+group by country),
+t2 (country,maxi) as (
+select country,max(maxim) from t1 
+group by country)
+select t2.country,
+maxi,t1.name from t2
+left join t1 
+on t1.country=t2.country 
+and t1.maxim=t2.maxi
+
+
+127(3) - 20
+
+with t1 (maker,model,type) as ( select maker,model,type from product
+where type='PC') ,
+t2 (maker,model,type) as (
+select maker,model,type from product
+where type='Laptop'),
+t3 (maker,model,cd) as (
+select t1.maker,t2.model,
+min(cast(replace(cd,'x','')as numeric)) 
+from t1 
+inner join t2 
+on t1.maker=t2.maker 
+left join pc
+on pc.model=t1.model
+group by t1.maker,t2.model),
+avgCD(maker,price) as (
+select t3.maker,min(price) 
+from laptop l inner join t3 on 
+t3.model=l.model
+where t3.cd=(select min(cast(replace(cd,'x','')as numeric)) from pc)
+group by maker
+having min(price)>0),
+t4 (maker,model,type) as ( select maker,model,type from product
+where type='PC') ,
+t5 (maker,model,type) as (
+select maker,model,type from product
+where type='Printer'),
+t6 (maker,model,price) as (
+select t4.maker,t4.model,min(pr.price) 
+from t4 inner join t5
+on t4.maker=t5.maker 
+left join printer pr
+on t5.model=pr.model
+group by t4.maker,t4.model),
+maxPC (maker,price) as (
+select t6.maker,max(pc.price) from pc
+inner join t6 on pc.model=t6.model
+where t6.price=(select min(price) from printer)
+group by t6.maker
+having max(pc.price)>0),
+t7 (maker,model,type) as ( select maker,model,type from product
+where type='Printer'),
+t8 (maker,model,type) as (
+select maker,model,type from product
+where type='Laptop'),
+t9 (maker,ram) as (
+select t8.maker,max(ram) from t7 
+inner join t8 on t7.maker=t8.maker
+left join laptop l on l.model=t8.model
+group by t8.maker),
+pr (maker,price) as (
+select t9.maker,max(pr.price) from printer pr 
+left join product p on pr.model=p.model
+inner join t9 on t9.maker=p.maker
+group by t9.maker
+having max(pr.price)>0),
+t10 (price) as (
+select avgCD.price from avgCD
+union all
+select maxPC.price from maxPC
+union all
+select pr.price from pr)
+select cast(avg(price) as NUMERIC(10,2)) as avg_val from t10
