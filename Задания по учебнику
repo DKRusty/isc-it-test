@@ -1,0 +1,157 @@
+Глава 2 
+
+Задание №1
+
+select * from Sales.Orders
+where cast(orderdate as date) between '2007.06.01' and '2007.06.30';
+
+Задание №2
+
+Select * from Sales.Orders
+where orderdate = EOMONTH(orderdate);
+
+Задание №3
+
+select empid,firstname,lastname 
+from HR.Employees
+where lastname like '%o%o%'
+
+Задание №4
+
+select orderid,sum(qty*unitprice) as totalvalue
+from Sales.OrderDetails
+group by orderid
+having sum(qty*unitprice)>10000
+order by totalvalue desc;
+
+Задание №5
+select top 3 shipcountry ,avg(freight) as avgfreight 
+from Sales.Orders 
+where cast(orderdate as date) between '2007.01.01' and '2007.12.31'
+group by shipcountry 
+order by avgfreight desc;
+
+Задание №6
+select  custid,orderdate,orderid,
+row_number() over(partition by custid 
+order by orderdate,orderid) as row_num 
+from Sales.Orders
+order by custid,orderdate;
+
+Задание №7
+
+select empid,firstname,lastname,titleofcourtesy,
+case
+when titleofcourtesy='Mr.' then 'Men'
+when titleofcourtesy='Ms.' or titleofcourtesy='Mrs.'  then 'Women'
+when titleofcourtesy='Dr.'  then 'No information'
+end as gender
+from HR.Employees;
+
+Задание №8
+
+with t1 (custid,region,nenol) as 
+(select custid,region,
+case 
+when region is not null then 1 
+else 0 end as nenol from Sales.Customers)
+select custid,region from t1
+order by nenol desc,region ;
+
+__________________________________________________________________________________________________
+
+Глава 3 
+
+Задание №1-1
+
+select empid,firstname,
+lastname,n from HR.Employees,dbo.Nums
+where n between 1 and 5
+order by n, empid;
+
+Задание №1-2
+
+select empid,
+dateadd(day,n-1,'20090612')
+from HR.Employees,dbo.nums
+where n<=datediff(day,'20090612','20090616')+'00000001';
+
+Задание №2
+
+select c.custid,
+count(o.orderid) as numorders,
+sum(qty) as totalqty from Sales.Customers c 
+inner join Sales.orders o 
+on c.custid=o.custid 
+inner join Sales.OrderDetails orde
+on o.orderid=orde.orderid
+where shipcountry='USA'
+group by c.custid;
+
+Задание №3
+
+select c.custid,c
+ompanyname,
+orderid,
+orderdate from Sales.Customers c
+left join Sales.Orders o
+on c.custid=o.custid;
+
+Задание №4
+
+select c.custid,
+companyname,
+orderid,
+orderdate from Sales.Customers c
+left join Sales.Orders o 
+on c.custid=o.custid
+where orderid is null;
+
+Задание №5
+
+select c.custid,
+companyname,
+orderid,
+orderdate from Sales.Customers c
+left join Sales.Orders o
+on c.custid=o.custid
+where cast(o.orderdate as date)='2007.02.12';
+
+Задание №6
+
+select c.custid,
+companyname,
+orderid,
+orderdate from Sales.Customers c
+left join Sales.Orders o 
+on c.custid=o.custid
+where cast(o.orderdate as date)='2007.02.12'
+
+Задание №6*
+
+with t1 (cid,comp,orderid,orderdate) as (
+select c.custid,companyname,orderid,
+orderdate from Sales.Customers c
+left join Sales.Orders o
+on c.custid=o.custid
+where cast(o.orderdate as date)='2007.02.12')
+select c.custid,c.companyname,
+t1.orderid,t1.orderdate from Sales.Customers c 
+left join t1 on c.custid=t1.cid;
+
+Задание №7
+
+with t1 (cid,comp,orderid,orderdate) as (
+select c.custid,companyname,orderid,
+orderdate from Sales.Customers c
+left join Sales.Orders o 
+on c.custid=o.custid
+where cast(o.orderdate as date)='2007.02.12')
+select c.custid,c.companyname,
+case
+when cast(t1.orderdate as date)='2007.02.12' then 'Yes'
+else 'No' end as 'HasOrderOn20070212'
+from Sales.Customers c 
+left join t1 on c.custid=t1.cid;
+
+__________________________________________________________________________________________________
