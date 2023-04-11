@@ -1,34 +1,17 @@
 CREATE TRIGGER dbo.TR_Basket_insert_update
 ON dbo.basket  
 AFTER INSERT   
-AS 
-if @@ROWCOUNT>=2 
-begin
-		update dbo.Basket 
-		set DiscountValue=b.value*0.05 from  dbo.Basket b,inserted i
-		where b.id_sku in (select distinct i.id_sku from inserted i
-		group by i.id_sku
-		having count(i.id_sku)>=2) 
-		and b.value=i.value 
-		and b. DiscountValue=i. DiscountValue 
-		and i.id_sku=b.id_sku
-		update dbo.Basket
-		set DiscountValue=0 from  dbo.Basket b,inserted i
-		where b.id_sku in (select distinct i.id_sku from inserted i
-		group by i.id_sku 
-		having count(i.id_sku)<2) 
-		and b.value=i.value 
-		and b. DiscountValue=i. DiscountValue 
-		and i.id_sku=b.id_sku
-	end
-else 
-	begin
-		update dbo.Basket
-		set DiscountValue=0 from  dbo.Basket b,inserted i
-		where b.id_sku in (select distinct i.id_sku from inserted i
-		group by i.id_sku
-		having count(id_sku)<2) 
-		and b.value=i.value 
-		and b. DiscountValue=i.DiscountValue 
-		and i.id_sku=b.id_sku
-end;
+as
+with t1 (t_id,ct) 
+as (select i.id_sku,count(i.id_sku) from inserted i
+		group by i.id_sku)
+update dbo.Basket 
+set DiscountValue = case 
+	when @@ROWCOUNT>=2 and t1.ct>=2 then b.value*0.05
+	when @@ROWCOUNT>=2 and t1.ct<2 then b.value*0
+	when @@ROWCOUNT<2  then b.value*0
+	end from  dbo.Basket b,t1,inserted i 
+where t1.t_id=b.id_sku
+and b.value=i.value 
+and b.DiscountValue=i.DiscountValue 
+and i.id_sku=b.id_sku;
