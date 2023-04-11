@@ -1,15 +1,21 @@
 CREATE PROCEDURE dbo.usp_MakeFamilyPurchase
     @FamilySurName varchar(255)    
 AS 
-If @FamilySurName in (select surname from dbo.family)
+if exists (select surname from dbo.Family where surname = @FamilySurName)
 begin
-		update dbo.family
-		set BudgetValue =(select f.BudgetValue-sum(b.Value)  
+	with t1 (id_f,sVal) as 
+		(select id_family,sum(b.Value)  
 		from dbo.family f inner join dbo.Basket b
 		on f.id=b.ID_Family
 		where @FamilySurName=surname
-		group by f.BudgetValue)
-		where @FamilySurName=surname
+		group by id_family)
+		
+		update dbo.family
+		set BudgetValue = BudgetValue -t1.sVal 
+		from dbo.family f inner join t1 
+		on t1.id_f=f.id		
 end
 else 
-	print 'Family not found';
+begin
+	raiserror('Family not found', 16, 1, @FamilySurName);
+end
