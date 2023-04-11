@@ -5,7 +5,7 @@ AS
 if @@ROWCOUNT>=2 
 begin
 		update dbo.Basket 
-		set DiscountValue=b.value*0.95 from  dbo.Basket b,inserted i
+		set DiscountValue=b.value*0.05 from  dbo.Basket b,inserted i
 		where b.id_sku in (select distinct i.id_sku from inserted i
 		group by i.id_sku
 		having count(i.id_sku)>=2) 
